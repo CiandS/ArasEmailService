@@ -319,7 +319,7 @@ _Pvt_Extensions
 .paket/paket.exe
 paket-files/
 
-# Secrets (customize as needed)
+# Ignore appsettings files
 appsettings.json
 appsettings.*.json
 
