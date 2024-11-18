@@ -1,0 +1,30 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.11.35327.3
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ArasEmailService", "ArasEmailService\ArasEmailService.csproj", "{A6251964-27FC-430F-BFBC-10121D78EC3A}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{43129ED8-3733-4F61-8A5B-8B1CC34E72B7}"
+	ProjectSection(SolutionItems) = preProject
+		appsetting.json = appsetting.json
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{A6251964-27FC-430F-BFBC-10121D78EC3A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A6251964-27FC-430F-BFBC-10121D78EC3A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A6251964-27FC-430F-BFBC-10121D78EC3A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A6251964-27FC-430F-BFBC-10121D78EC3A}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {D847CCBA-B30D-40EB-89CB-FFCD38852CDB}
+	EndGlobalSection
+EndGlobal
