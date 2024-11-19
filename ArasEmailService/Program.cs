@@ -20,7 +20,6 @@ namespace ArasEmailService
             // Set up Dependency Injection
             var services = new ServiceCollection();
 
-            // Add SmtpClient with configuration from appsettings.json
             services.AddTransient<SmtpClient>(provider =>
             {
                 var smtpClient = new SmtpClient();
@@ -29,20 +28,16 @@ namespace ArasEmailService
                 return smtpClient;
             });
 
-            // Add EmailService that depends on SmtpClient
             services.AddTransient<EmailService>();
 
-            // Build the service provider
             var serviceProvider = services.BuildServiceProvider();
 
-            // Create a scope for resolving services
             using (var scope = serviceProvider.CreateScope())
             {
                 var emailService = scope.ServiceProvider.GetRequiredService<EmailService>();
 
                 try
                 {
-                    // Process bookings or any email-related tasks
                     emailService.ProcessBookings();
                 }
                 catch (Exception ex)
