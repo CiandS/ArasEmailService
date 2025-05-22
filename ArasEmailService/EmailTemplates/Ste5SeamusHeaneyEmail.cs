@@ -7,14 +7,14 @@ using System.Threading.Tasks;
 
 namespace ArasEmailService.EmailTemplates
 {
-    public class Apt3OscarWildeEmail
+    public class Ste5SeamusHeaneyEmail
     {
         public static string Instructions (JToken booking)
         {
             return $@"
-            <h3>Apt. 3: Oscar Wilde</h3>
+            <h3>Ste. 5: Seamus Heaney</h3>
             <p>Please enter through the <span style='color:purple'>PURPLE</span> front door with keypad code <strong>0669</strong>. 
-            Your Apt. #3 is up the stairs on the 1st floor. The key lockbox code is <strong>0321</strong>. Please scramble the code after retrieving keys, and after leaving. 
+            Your suite is up the stairs on the 1st floor. The key lockbox code is <strong>0521</strong>. Please scramble the code after retrieving keys, and after leaving. 
             Thank you!</p>
 
             <h4>Amenities</h4>
@@ -25,13 +25,6 @@ namespace ArasEmailService.EmailTemplates
                 <li><strong>Heating:</strong> There is central heating in the apartment.</li>
                 <li><strong>Hot Water:</strong> Let the hot water tap run for a while until it’s hot.</li>
                 <li><strong>Toilet:</strong> Please, nothing but toilet paper should go in the toilet. There’s a small trash bin for everything else.</li>
-                <li><strong>Electric Hob Instructions:</strong>
-                    <ol>
-                        <li>To turn on or off the hob: Hold down the switch on the second row, far right, for 3 seconds.</li>
-                        <li>Choose the ring you wish to use: Press either switch far left.</li>
-                        <li>Adjust heat using the plus and minus signs in the center.</li>
-                    </ol>
-                </li>
             </ul>
     ";
         }

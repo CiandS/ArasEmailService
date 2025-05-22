@@ -1,0 +1,59 @@
+﻿@model ArasEmailService.Models.ArrivalGuide
+
+<html>
+<body>
+    <p>Dear @Model.CustomerName,</p>
+    <p>
+        <strong>Fáilte (Welcome)!</strong> If you need anything before, during, or after your stay, please feel free to reach me at <a href="mailto:info@arasdestaic.com">info@arasdestaic.com</a>.
+        You can also contact us through the website live chat if you prefer. The Brian de Staic jewellery shop across the street is like a hotel concierge. 
+        This is our company, and our staff are happy to help with any questions you may have to enhance your stay too.
+    </p>
+    <p>
+        We also offer 10% discount to our guests in our shop.
+        The staff in the shop is available to guests from
+        Monday to Saturday: 9.30am to 5.30pm
+        Sundays 12.00 noon to 5.00pm (Peak Season)
+    </p>
+
+    <h3>Stay Instructions for Áras de Staic</h3>
+
+    <p><strong>Google maps pin to us:</strong> <a href="@Model.DirectionsLink">Find us on Google Maps</a><br />
+    <strong>Address:</strong> Green St, Dingle, Co. Kerry, V92XDK6, Ireland</p>
+
+    <p><strong>Accommodation Details:</strong></p>
+    <div>
+        @foreach (var instruction in Model.Instructions)
+        {
+            <div>
+                @instruction
+            </div>
+        }
+    </div>
+
+    <p>
+        <strong>Check-in Time:</strong> 3pm <br />
+        <strong>Check-out Time:</strong> 11am
+    </p>
+
+    <h4>Wifi Details</h4>
+    <p><strong>Network:</strong> ArasdeStaic<br />
+    <strong>Password:</strong> arasdingle21<br />
+    Enjoy your stay!</p>
+
+    <h4>Parking</h4>
+    <p>
+        While there is free street parking, please respect local residents and use the free parking lot across the street, just beside the church.<br />
+        Here is a pin to the carpark: <a href="@Model.ParkingLink">Parking Location</a>. There are also paid parking options around town.
+    </p>
+
+    <p>
+        We look forward to having you with us.<br />
+        <em>Go raibh maith agat (Thank you)!</em>
+    </p>
+
+    <p>We would really appreciate your reviews on Google if you have time: <a href="@Model.ReviewLink">Leave a review on Google</a></p>
+
+    <p>Kind regards,</p>
+    <p>Cian,<br>Áras de Staic</p>
+</body>
+</html>

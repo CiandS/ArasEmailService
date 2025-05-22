@@ -1,15 +1,14 @@
-﻿using System;
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Configuration;
-using MailKit.Net.Smtp;
-using MailKit.Security;
+using Microsoft.Extensions.Logging;
+using ArasEmailService.Infrastructure.Extensions;
 using ArasEmailService.Services;
 
 namespace ArasEmailService
 {
     class Program
     {
-        static void Main(string[] args)
+        static async Task Main(string[] args)
         {
             // Build the configuration from appsettings.json
             var builder = new ConfigurationBuilder()
@@ -19,34 +18,33 @@ namespace ArasEmailService
 
             // Set up Dependency Injection
             var services = new ServiceCollection();
-
-            services.AddTransient<SmtpClient>(provider =>
-            {
-                var smtpClient = new SmtpClient();
-                smtpClient.Connect(config["Smtp:Host"], int.Parse(config["Smtp:Port"]), SecureSocketOptions.StartTls);
-                smtpClient.Authenticate(config["Smtp:User"], config["Smtp:Password"]);
-                return smtpClient;
-            });
-
-            services.AddTransient<EmailService>();
+            services.AddApplicationServices(config);  // This is where services are registered
 
             var serviceProvider = services.BuildServiceProvider();
 
-            using (var scope = serviceProvider.CreateScope())
-            {
-                var emailService = scope.ServiceProvider.GetRequiredService<EmailService>();
+            // Get the logger for Program class
+            var logger = serviceProvider.GetRequiredService<ILogger<Program>>();
 
-                try
+            try
+            {
+                logger.LogInformation("Starting booking processing...");
+
+                // Create a scope and get the EmailService
+                using (var scope = serviceProvider.CreateScope())
                 {
-                    emailService.ProcessBookings();
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"Error occurred: {ex.Message}");
+                    var emailService = scope.ServiceProvider.GetRequiredService<EmailService>();
+
+                    // Call the ProcessBookings method
+                    await emailService.ProcessBookingsAsync();
+
+                    logger.LogInformation("Booking processing completed.");
                 }
             }
-
-            Console.WriteLine("Booking processing completed.");
+            catch (Exception ex)
+            {
+                // Log the exception
+                logger.LogError(ex, "An error occurred during booking processing.");
+            }
         }
     }
 }
