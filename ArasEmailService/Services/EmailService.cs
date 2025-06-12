@@ -43,6 +43,14 @@ namespace ArasEmailService.Services
                 {
                     int bookingId = (int)booking["id"];
 
+                    // Filter by booking status
+                    string status = booking["status"]?.ToString();
+                    if (!string.Equals(status, "confirmed", StringComparison.OrdinalIgnoreCase))
+                    {
+                        _logger.LogInformation("Skipping booking ID: {BookingId} due to status '{Status}'.", bookingId, status);
+                        continue;
+                    }
+
                     // Check if the booking is imported
                     var isImported = booking.Value<bool?>("imported") ?? false;
                     if (isImported)
