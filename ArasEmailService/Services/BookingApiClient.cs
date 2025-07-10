@@ -39,7 +39,7 @@ namespace ArasEmailService.Services
             try
             {
                 DateTime startDate = DateTime.Now;
-                DateTime endDate = DateTime.Now.AddDays(10);
+                DateTime endDate = DateTime.Now.AddDays(11);
                 string formattedStartDate = startDate.ToString("yyyy-MM-dd"); // Note: use hyphens
                 string formattedEndDate = endDate.ToString("yyyy-MM-dd");
 
@@ -50,7 +50,8 @@ namespace ArasEmailService.Services
                     $"filter[meta_query][0][value]={formattedStartDate}",
                     $"filter[meta_query][0][compare]=>=",
                     $"filter[meta_query][0][type]=DATE",
-                    $"filter[meta_query][1][key]=mphb_check_out_date",
+
+                    $"filter[meta_query][1][key]=mphb_check_in_date",
                     $"filter[meta_query][1][value]={formattedEndDate}",
                     $"filter[meta_query][1][compare]=<=",
                     $"filter[meta_query][1][type]=DATE"
