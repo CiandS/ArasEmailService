@@ -10,10 +10,18 @@ namespace ArasEmailService
     {
         static async Task Main(string[] args)
         {
-            // Build the configuration from appsettings.json
-            var builder = new ConfigurationBuilder()
-                .SetBasePath(Directory.GetCurrentDirectory())
-                .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true); // optional flag on json for env variables in github
+            // Build configuration
+            var builder = new ConfigurationBuilder();
+
+            if (string.IsNullOrEmpty(Environment.GetEnvironmentVariable("GITHUB_ACTIONS")))
+            {
+                // Local dev: load JSON if present
+                builder.AddJsonFile("appsettings.json", optional: true, reloadOnChange: true);
+            }
+
+            // Always load env vars (GitHub secrets override JSON)
+            builder.AddEnvironmentVariables();
+
             IConfiguration config = builder.Build();
 
             // Set up Dependency Injection
