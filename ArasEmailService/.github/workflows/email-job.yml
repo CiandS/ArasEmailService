@@ -1,0 +1,35 @@
+name: Email Service Scheduler
+
+on:
+  schedule:
+    - cron: "0 7 * * *"   # Runs daily at 7am UTC
+  workflow_dispatch:       # Allows manual trigger
+
+jobs:
+  run-email-service:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+
+      - name: Restore dependencies
+        run: dotnet restore
+
+      - name: Build project
+        run: dotnet build --configuration Release --no-restore
+
+      - name: Run email service
+        env:
+          ConnectionStrings__DefaultConnection: ${{ secrets.ConnectionStrings__DefaultConnection }}
+          Smtp__Host: ${{ secrets.Smtp__Host }}
+          Smtp__Port: ${{ secrets.Smtp__Port }}
+          Smtp__User: ${{ secrets.Smtp__User }}
+          Smtp__Password: ${{ secrets.Smtp__Password }}
+          Smtp__SecureSocketOptions: ${{ secrets.Smtp__SecureSocketOptions }}
+        run: dotnet run --project ./ArasEmailService/ArasEmailService.csproj
