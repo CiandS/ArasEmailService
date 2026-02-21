@@ -10,48 +10,45 @@ namespace ArasEmailService
     {
         static async Task Main(string[] args)
         {
-            // Build configuration
+            // Build configuration safely
             var builder = new ConfigurationBuilder();
 
-            if (string.IsNullOrEmpty(Environment.GetEnvironmentVariable("GITHUB_ACTIONS")))
+            if (Environment.GetEnvironmentVariable("DOTNET_RUNNING_IN_CONTAINER") == null &&
+                string.IsNullOrEmpty(Environment.GetEnvironmentVariable("GITHUB_ACTIONS")))
             {
-                // Local dev: load JSON if present
-                builder.AddJsonFile("appsettings.json", optional: true, reloadOnChange: true);
+                // Local dev only: specify exact path to JSON
+                var jsonPath = Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "appsettings.json");
+                if (File.Exists(jsonPath))
+                {
+                    builder.AddJsonFile(jsonPath, optional: true, reloadOnChange: true);
+                }
             }
 
-            // Always load env vars (GitHub secrets override JSON)
+            // Always load env vars (GitHub secrets)
             builder.AddEnvironmentVariables();
+            var config = builder.Build();
 
-            IConfiguration config = builder.Build();
-
-            // Set up Dependency Injection
+            // DI setup
             var services = new ServiceCollection();
-            services.AddApplicationServices(config);  
-
+            services.AddApplicationServices(config);
             var serviceProvider = services.BuildServiceProvider();
 
-            // Get the logger for Program class
             var logger = serviceProvider.GetRequiredService<ILogger<Program>>();
 
             try
             {
                 logger.LogInformation("Starting booking processing...");
 
-                // Create a scope and get the EmailService
-                using (var scope = serviceProvider.CreateScope())
-                {
-                    var emailService = scope.ServiceProvider.GetRequiredService<EmailService>();
+                using var scope = serviceProvider.CreateScope();
+                var emailService = scope.ServiceProvider.GetRequiredService<EmailService>();
+                await emailService.ProcessBookingsAsync();
 
-                    // Call the ProcessBookings method
-                    await emailService.ProcessBookingsAsync();
-
-                    logger.LogInformation("Booking processing completed.");
-                }
+                logger.LogInformation("Booking processing completed.");
             }
             catch (Exception ex)
             {
-                // Log the exception
                 logger.LogError(ex, "An error occurred during booking processing.");
+                throw; // make sure GitHub Actions sees the failure
             }
         }
     }
