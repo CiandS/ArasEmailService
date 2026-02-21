@@ -12,7 +12,7 @@ namespace ArasEmailService
         {
             // Build the configuration from appsettings.json
             var builder = new ConfigurationBuilder()
-                .SetBasePath(AppContext.BaseDirectory)
+                .SetBasePath(Directory.GetCurrentDirectory())
                 .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true); // optional flag on json for env variables in github
             IConfiguration config = builder.Build();
 
