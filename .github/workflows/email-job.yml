@@ -35,4 +35,4 @@ jobs:
         Smtp__SecureSocketOptions: ${{ secrets.Smtp__SecureSocketOptions }}
         ConnectionStrings__DefaultConnection: ${{ secrets.ConnectionStrings__DefaultConnection }}
         GITHUB_ACTIONS: true
-      run: dotnet ./ArasEmailService/ArasEmailService/bin/Release/net8.0/ArasEmailService.dll
+      run: dotnet run --project ./ArasEmailService/ArasEmailService.csproj --configuration Release
