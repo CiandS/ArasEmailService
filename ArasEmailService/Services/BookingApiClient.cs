@@ -82,7 +82,6 @@ namespace ArasEmailService.Services
             }
         }
 
-
         // Handle pagination
         public async Task<List<JToken>> GetAllBookingsAsync(DateTime? afterDate = null, int perPage = 100)
         {

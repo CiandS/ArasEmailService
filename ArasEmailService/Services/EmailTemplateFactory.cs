@@ -28,7 +28,7 @@ namespace ArasEmailService.Services
             try
             {
                 _logger.LogInformation("Rendering template: {TemplatePath} with model: {ModelType}", templatePath, model?.GetType().Name ?? "null");
-
+ 
                 // Preprocess instructions to HtmlString
                 if (model is ArrivalGuide arrivalGuideModel)
                 {
