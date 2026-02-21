@@ -21,8 +21,10 @@ jobs:
     - name: Restore dependencies
       run: dotnet restore ./ArasEmailService/ArasEmailService.csproj
 
-    - name: Build project
-      run: dotnet build --configuration Release ./ArasEmailService/ArasEmailService.csproj
+    - name: Clean and Build Release
+      run: |
+        dotnet clean ./ArasEmailService/ArasEmailService.csproj
+        dotnet build --configuration Release ./ArasEmailService/ArasEmailService.csproj
 
     - name: Run Email Service
       env:
