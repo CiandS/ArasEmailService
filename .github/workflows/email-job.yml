@@ -42,4 +42,4 @@ jobs:
         EMAIL__FROMEMAIL: ${{ secrets.EMAIL__FROMEMAIL }}
         EMAIL__FROMNAME: ${{ secrets.EMAIL__FROMNAME }}
         GITHUB_ACTIONS: true
-        run: dotnet run --project ./ArasEmailService/ArasEmailService.csproj --configuration Release
+      run: dotnet run --project ./ArasEmailService/ArasEmailService.csproj --configuration Release
