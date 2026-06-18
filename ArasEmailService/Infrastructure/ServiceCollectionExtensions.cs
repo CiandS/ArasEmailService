@@ -49,6 +49,14 @@ namespace ArasEmailService.Infrastructure.Extensions
             services.AddSingleton<IEmailSender, EmailSender>();
             services.AddSingleton<EmailService>();
 
+            // Booking state service (scoped) - uses same DB connection string
+            services.AddScoped<Services.Interfaces.IBookingStateService>(provider =>
+            {
+                var connectionString = config.GetValue<string>("Database:ConnectionString");
+                var logger = provider.GetRequiredService<ILogger<Services.BookingStateService>>();
+                return new Services.BookingStateService(connectionString, logger);
+            });
+
             // Register LogRepository with connection string and logger
             services.AddScoped<ILogRepository>(provider =>
             {

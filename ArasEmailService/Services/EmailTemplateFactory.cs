@@ -3,6 +3,7 @@ using ArasEmailService.Services.Interfaces;
 using Microsoft.AspNetCore.Html;
 using Microsoft.Extensions.Logging;
 using RazorLight;
+using System.IO;
 
 namespace ArasEmailService.Services
 {
@@ -39,11 +40,48 @@ namespace ArasEmailService.Services
                 }
 
                 // Render the template
-                var template = await _razorLightEngine.CompileRenderAsync(templatePath, model);
+                try
+                {
+                    var template = await _razorLightEngine.CompileRenderAsync(templatePath, model);
+                    _logger.LogInformation("Template rendered successfully: {TemplatePath}", templatePath);
+                    return template;
+                }
+                catch (TemplateNotFoundException)
+                {
+                    // Attempt to load template from disk as a fallback (useful in local dev)
+                    var lastSegment = templatePath.Split('.').Last(); // e.g. LateBookingTemplate.cshtml
+                    var fileName = lastSegment;
 
-                _logger.LogInformation("Template rendered successfully: {TemplatePath}", templatePath);
+                    var candidates = new[]
+                    {
+                        Path.Combine(AppContext.BaseDirectory, fileName),
+                        Path.Combine(AppContext.BaseDirectory, "EmailTemplates", fileName),
+                        Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "ArasEmailService", "EmailTemplates", fileName),
+                        Path.Combine(AppContext.BaseDirectory, "..", "..", "..", fileName)
+                    };
 
-                return template;
+                    foreach (var candidate in candidates)
+                    {
+                        try
+                        {
+                            var full = Path.GetFullPath(candidate);
+                            if (File.Exists(full))
+                            {
+                                var content = await File.ReadAllTextAsync(full);
+                                var rendered = await _razorLightEngine.CompileRenderStringAsync(templatePath, content, model);
+                                _logger.LogInformation("Template rendered from disk fallback: {Path}", full);
+                                return rendered;
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.LogDebug(ex, "Failed to load template candidate: {Candidate}", candidate);
+                        }
+                    }
+
+                    // If not found on disk, rethrow so caller can fallback
+                    throw;
+                }
             }
             catch (Exception ex)
             {
