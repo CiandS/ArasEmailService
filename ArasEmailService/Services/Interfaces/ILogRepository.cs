@@ -8,7 +8,7 @@ namespace ArasEmailService.Services.Interfaces
         /// <summary>
         /// Interface for logging email operations related to bookings.
         /// </summary>
-        Task<bool> HasEmailBeenSentAsync(int bookingId, DateTime startDate);
+        Task<bool> HasEmailBeenSentAsync(int bookingId, DateTime startDate, string emailType = null);
         Task RecordEmailSentAsync(int bookingId, string emailType);
     }
 }

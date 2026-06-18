@@ -13,31 +13,40 @@ namespace ArasEmailService.Services
 
         public LogRepository(string connectionString, ILogger<LogRepository> logger)
         {
-            _connectionString = connectionString ?? throw new ArgumentNullException(nameof(connectionString)); 
+            _connectionString = connectionString ?? throw new ArgumentNullException(nameof(connectionString));
             _logger = logger;
         }
 
-        public async Task<bool> HasEmailBeenSentAsync(int bookingId, DateTime startDate)
+        public async Task<bool> HasEmailBeenSentAsync(int bookingId, DateTime startDate, string emailType = null)
         {
             try
             {
                 using (var connection = new MySqlConnection(_connectionString))
                 {
                     await connection.OpenAsync();
+
                     string query = @"SELECT COUNT(1) FROM grN_EmailLog 
                     WHERE booking_id = @bookingId AND email_sent_date >= @startDate";
+
+                    if (!string.IsNullOrWhiteSpace(emailType))
+                    {
+                        query += " AND email_type = @type";
+                    }
 
                     using (var command = new MySqlCommand(query, connection))
                     {
                         command.Parameters.AddWithValue("@bookingId", bookingId);
                         command.Parameters.AddWithValue("@startDate", startDate);
 
-                        int count = Convert.ToInt32(await command.ExecuteScalarAsync());
+                        if (!string.IsNullOrWhiteSpace(emailType))
+                        {
+                            command.Parameters.AddWithValue("@type", emailType);
+                        }
 
-                        // Set the emailSent flag to true if the email was found to be sent
+                        int count = Convert.ToInt32(await command.ExecuteScalarAsync());
                         bool emailSent = count > 0;
 
-                        _logger.LogInformation($"Checked email sent status for booking ID: {bookingId}. Email sent: {emailSent}");
+                        _logger.LogInformation("Checked email sent status for booking ID: {BookingId}, emailType: {EmailType}. Email sent: {EmailSent}", bookingId, emailType ?? "(any)", emailSent);
                         return emailSent;
                     }
                 }
@@ -45,7 +54,7 @@ namespace ArasEmailService.Services
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error checking email sent status for booking ID: {BookingId}", bookingId);
-                return false;  // Return false if there's an error
+                return false;
             }
         }
 
@@ -68,13 +77,13 @@ namespace ArasEmailService.Services
                         command.Parameters.AddWithValue("@type", emailType);
 
                         await command.ExecuteNonQueryAsync();
-                        _logger.LogInformation("Arrival guide email log recorded for booking ID: {BookingId}", bookingId);
+                        _logger.LogInformation("Email log recorded for booking ID: {BookingId}, emailType: {EmailType}", bookingId, emailType);
                     }
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error recording arrival guide log for booking ID: {BookingId}", bookingId);
+                _logger.LogError(ex, "Error recording email log for booking ID: {BookingId}", bookingId);
             }
         }
     }

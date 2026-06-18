@@ -9,17 +9,17 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="GraphQL" Version="8.2.1" />
-    <PackageReference Include="MailKit" Version="4.8.0" />
-    <PackageReference Include="Microsoft.AspNetCore.Mvc.Razor" Version="2.2.0" />
-    <PackageReference Include="Microsoft.AspNetCore.Mvc.ViewFeatures" Version="2.2.0" />
-    <PackageReference Include="Microsoft.Data.SqlClient" Version="5.2.2" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.FileExtensions" Version="9.0.0" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="9.0.0" />
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.0" />
-    <PackageReference Include="MySql.Data" Version="9.1.0" />
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
-<PackageReference Include="Microsoft.Extensions.Logging" Version="9.0.0" />
+    <PackageReference Include="GraphQL" Version="8.8.4" />
+    <PackageReference Include="MailKit" Version="4.17.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Razor" Version="2.3.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.ViewFeatures" Version="2.3.11" />
+    <PackageReference Include="Microsoft.Data.SqlClient" Version="7.0.1" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.FileExtensions" Version="10.0.9" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="10.0.9" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.9" />
+    <PackageReference Include="MySql.Data" Version="9.7.0" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
+<PackageReference Include="Microsoft.Extensions.Logging" Version="10.0.9" />
 <PackageReference Include="RazorLight" Version="2.3.1" />
 
   </ItemGroup>
@@ -33,6 +33,9 @@
 <ItemGroup>
   <EmbeddedResource Include="EmailTemplates\ArrivalGuideTemplate.cshtml" />
 </ItemGroup>
+<ItemGroup>
+      <EmbeddedResource Include="EmailTemplates\LateBookingTemplate.cshtml" />
+    </ItemGroup>
 
 
 </Project>

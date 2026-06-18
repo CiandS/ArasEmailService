@@ -1,0 +1,5 @@
+﻿@model ArasEmailService.Models.LateBooking
+
+<p>Check-in: @(Model.CheckInDate?.ToString("yyyy-MM-dd") ?? "N/A")</p>
+<p>Check-out: @(Model.CheckOutDate?.ToString("yyyy-MM-dd") ?? "N/A")</p>
+<p>Accommodation(s): @(Model.Accommodations != null && Model.Accommodations.Count > 0 ? string.Join(", ", Model.Accommodations) : "N/A")</p>
