@@ -88,6 +88,10 @@ namespace ArasEmailService.Services
                         continue;
                     }
 
+                    // Capture raw strings for diagnostics
+                    var rawCheckIn = booking["check_in_date"]?.ToString();
+                    var rawCreated = booking["date_created"]?.ToString();
+
                     DateTimeOffset bookingDateOffset = DateTimeOffset.MinValue;
                     try
                     {
@@ -101,34 +105,49 @@ namespace ArasEmailService.Services
 
                     // Late booking if booking was created within 10 days before check-in (based on creation vs check-in)
                     bool isLateByAge = false;
+                    double diff = double.NaN;
                     if (bookingDateOffset != DateTimeOffset.MinValue)
                     {
-                        var diff = (checkInDateOffset.UtcDateTime - bookingDateOffset.UtcDateTime).TotalDays;
+                        diff = (checkInDateOffset.UtcDateTime - bookingDateOffset.UtcDateTime).TotalDays;
                         isLateByAge = diff >= 0 && diff <= 10;
                     }
 
-                    // Only send the 'late booking' notice when the booking was created recently (e.g. within the last 24 hours).
-                    bool createdRecently = bookingDateOffset != DateTimeOffset.MinValue && (DateTime.UtcNow - bookingDateOffset.UtcDateTime).TotalHours <= 24;
-                    bool shouldSendLateNow = isLateByAge && createdRecently;
+                    // Diagnostic logging to help investigate false positives
+                    if (isLateByAge)
+                    {
+                        _logger.LogInformation("Late booking detected for booking {BookingId}. raw check_in_date='{RawCheckIn}', raw date_created='{RawCreated}', parsed_check_in='{ParsedCheckIn}', parsed_created='{ParsedCreated}', diff_days={Diff}",
+                            bookingId,
+                            rawCheckIn ?? "(null)",
+                            rawCreated ?? "(null)",
+                            checkInDateOffset.UtcDateTime.ToString("o"),
+                            bookingDateOffset == DateTimeOffset.MinValue ? "(unparsed)" : bookingDateOffset.UtcDateTime.ToString("o"),
+                            double.IsNaN(diff) ? (object)"(n/a)" : diff);
+                    }
 
-                    if (shouldSendLateNow)
+                    // Send the 'late booking' notice when the booking was created within 10 days before check-in
+                    if (isLateByAge)
                     {
                         // For late-booking notices we DO NOT exclude imported bookings.
                         bool lateSent = await _logRepository.HasEmailBeenSentAsync(bookingId, DateTime.UtcNow.AddDays(-30), "Late Booking");
                         if (lateSent)
                         {
-                            _logger.LogInformation($"Late Booking email already sent for booking ID: {bookingId}. Skipping.");
-                            continue;
+                            _logger.LogInformation($"Late Booking email already sent for booking ID: {bookingId}.");
+                        }
+                        else
+                        {
+                            _logger.LogInformation("Processing booking ID: {BookingId} as late booking (booked within 10 days of check-in).", bookingId);
+                            await ProcessLateBookingAsync(booking);
                         }
 
-                        _logger.LogInformation("Processing booking ID: {BookingId} as late booking (booked within 10 days of check-in and created recently).", bookingId);
-                        await ProcessLateBookingAsync(booking);
-                        continue;
+                        // Do not short-circuit further processing — allow arrival guide flow to continue so the arrival guide
+                        // can be sent at its normal time (or immediately if it also qualifies now).
                     }
 
                     // For arrival guide flow we still exclude imported/external-imported bookings
+                    // However, if the booking is late (isLateByAge) we allow arrival guide to be sent as well so
+                    // both late booking notice and arrival guide can be delivered when applicable.
                     var isImported = booking.Value<bool?>("imported") ?? false;
-                    if (isImported)
+                    if (isImported && !isLateByAge)
                     {
                         _logger.LogInformation($"Skipping email for imported booking ID: {bookingId}");
                         continue;
