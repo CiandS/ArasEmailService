@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Html;
 using System.Dynamic;
 using System.Collections.Generic;
 using System;
+using System.Linq;
 
 namespace ArasEmailService.Services
 {
@@ -17,6 +18,10 @@ namespace ArasEmailService.Services
         private readonly SmtpClient _smtpClient;
         private readonly ILogger<EmailSender> _logger;
         private readonly IEmailTemplateFactory _emailTemplateFactory;
+        private readonly string _smtpHost;
+        private readonly int _smtpPort;
+        private readonly string _smtpUser;
+        private readonly string _smtpPass;
         // Known accommodation id -> friendly display name mapping for late booking emails
         private static readonly System.Collections.Generic.Dictionary<int, string> AccommodationNames =
             new()
@@ -40,11 +45,16 @@ namespace ArasEmailService.Services
                 { 12566, "The Brandon Heights — Suite 16" },
             };
 
-        public EmailSender(SmtpClient smtpClient, ILogger<EmailSender> logger, IEmailTemplateFactory emailTemplateFactory)
+        public EmailSender(SmtpClient smtpClient, ILogger<EmailSender> logger, IEmailTemplateFactory emailTemplateFactory, Microsoft.Extensions.Configuration.IConfiguration config)
         {
             _smtpClient = smtpClient;
             _logger = logger;
             _emailTemplateFactory = emailTemplateFactory;
+            // Read SMTP settings so we can reconnect if the client becomes disconnected
+            _smtpHost = config["Smtp:Host"];
+            int.TryParse(config["Smtp:Port"], out _smtpPort);
+            _smtpUser = config["Smtp:User"];
+            _smtpPass = config["Smtp:Password"];
         }
 
         public async Task SendArrivalGuideEmailAsync(JToken booking, List<HtmlString> instructionsList)
@@ -77,14 +87,33 @@ namespace ArasEmailService.Services
                 // Create the email message
                 var message = new MimeMessage();
                 message.From.Add(new MailboxAddress("Áras de Staic", "info@arasdestaic.com"));
-                message.To.Add(new MailboxAddress($"{booking["customer"]["first_name"]} {booking["customer"]["last_name"]}", booking["customer"]["email"].ToString()));
+
+                var recipientEmail = booking["customer"]?["email"]?.ToString();
+                var recipientName = $"{booking["customer"]?["first_name"]} {booking["customer"]?["last_name"]}".Trim();
+
+                if (string.IsNullOrWhiteSpace(recipientEmail))
+                {
+                    _logger.LogWarning("Skipping Arrival Guide for booking {BookingId} because customer email is missing.", bookingId);
+                    return;
+                }
+
+                // Validate email address
+                try
+                {
+                    var _ = new System.Net.Mail.MailAddress(recipientEmail);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Skipping Arrival Guide for booking {BookingId} because customer email is invalid: {Email}", bookingId, recipientEmail);
+                    return;
+                }
+
+                message.To.Add(new MailboxAddress(recipientName, recipientEmail));
                 message.Bcc.Add(new MailboxAddress("Áras de Staic", "info@arasdestaic.com"));
                 message.Subject = $"Booking #{bookingId} Arrival Guide - Áras de Staic";
                 message.Body = new TextPart("html") { Text = emailContent };
 
-                // Send the email
-                _smtpClient.Send(message);
-                _logger.LogInformation($"Arrival guide email sent successfully for booking ID: {bookingId}");
+                await SendMessageAsync(message, bookingId);
 
             }
             catch (TemplateNotFoundException ex)
@@ -201,12 +230,57 @@ namespace ArasEmailService.Services
                 message.Subject = $"Booking #{bookingId} — Late booking info";
                 message.Body = new TextPart("html") { Text = emailContent };
 
-                _smtpClient.Send(message);
-                _logger.LogInformation($"Late booking email sent successfully for booking ID: {bookingId}");
+                await SendMessageAsync(message, bookingId);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "An error occurred while sending late booking email for booking ID: {BookingId}", bookingId);
+                throw;
+            }
+        }
+
+        private async Task SendMessageAsync(MimeMessage message, int bookingId)
+        {
+            try
+            {
+                if (!_smtpClient.IsConnected)
+                {
+                    _logger.LogInformation("SMTP client not connected. Attempting to reconnect...");
+                    if (!string.IsNullOrWhiteSpace(_smtpHost) && _smtpPort != 0)
+                    {
+                        _smtpClient.Connect(_smtpHost, _smtpPort, MailKit.Security.SecureSocketOptions.StartTls);
+                        if (!string.IsNullOrWhiteSpace(_smtpUser))
+                            _smtpClient.Authenticate(_smtpUser, _smtpPass);
+                    }
+                    else
+                    {
+                        _logger.LogWarning("SMTP host/port not available in configuration; cannot reconnect.");
+                    }
+                }
+
+                // Final safeguard: ensure at least one recipient exists
+                if (!message.To.Any() && !message.Cc.Any() && !message.Bcc.Any())
+                {
+                    _logger.LogWarning("Skipping send for booking {BookingId}: message has no recipients.", bookingId);
+                    return;
+                }
+
+                _smtpClient.Send(message);
+                _logger.LogInformation("Email sent successfully for booking {BookingId} to recipients: {To}", bookingId, string.Join(',', message.To.Select(a => a.ToString())));
+            }
+            catch (MailKit.Net.Smtp.SmtpCommandException sxe)
+            {
+                _logger.LogError(sxe, "SMTP command failed sending booking {BookingId}: StatusCode={StatusCode}, Message={Message}", bookingId, sxe.StatusCode, sxe.Message);
+                throw;
+            }
+            catch (MailKit.ServiceNotConnectedException snc)
+            {
+                _logger.LogError(snc, "SMTP client not connected when sending booking {BookingId}", bookingId);
+                throw;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Unexpected error sending email for booking {BookingId}", bookingId);
                 throw;
             }
         }
