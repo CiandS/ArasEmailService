@@ -17,6 +17,9 @@ namespace ArasEmailService.Infrastructure.Extensions
             var apiConfig = config.GetSection("Api").Get<Api>();
             services.Configure<Api>(config.GetSection("Api"));
 
+            // Make IConfiguration available to DI consumers
+            services.AddSingleton<IConfiguration>(config);
+
             services.AddSingleton(resolver => resolver.GetRequiredService<IOptions<Api>>().Value);
             services.AddHttpClient<IBookingApiClient, BookingApiClient>();
 
