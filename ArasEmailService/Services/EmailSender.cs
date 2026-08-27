@@ -17,6 +17,28 @@ namespace ArasEmailService.Services
         private readonly SmtpClient _smtpClient;
         private readonly ILogger<EmailSender> _logger;
         private readonly IEmailTemplateFactory _emailTemplateFactory;
+        // Known accommodation id -> friendly display name mapping for late booking emails
+        private static readonly System.Collections.Generic.Dictionary<int, string> AccommodationNames =
+            new()
+            {
+                { 66, "Apt. 1: James Joyce" },
+                { 104, "Apt. 2: W.B. Yeats" },
+                { 100, "Apt. 3: Oscar Wilde" },
+                { 1958, "Ste. 4: Eileen Gray" },
+                { 98, "Ste. 5: Seamus Heaney" },
+                { 102, "Ste. 6: Samuel Beckett" },
+                // Blasket extension mapping (use fuller descriptions if desired)
+                { 12571, "An Clós (The Courtyard) — Suite 7" },
+                { 12574, "An Clós (The Courtyard) — Suite 8" },
+                { 12573, "An Clós (The Courtyard) — Suite 9" },
+                { 12569, "The Peninsula Collection — Suite 10" },
+                { 12568, "The Peninsula Collection — Suite 11" },
+                { 12570, "The Peninsula Collection — Suite 12" },
+                { 12567, "The Blasket Suite — Suite 13" },
+                { 12564, "The Brandon Heights — Suite 14" },
+                { 12565, "The Brandon Heights — Suite 15" },
+                { 12566, "The Brandon Heights — Suite 16" },
+            };
 
         public EmailSender(SmtpClient smtpClient, ILogger<EmailSender> logger, IEmailTemplateFactory emailTemplateFactory)
         {
@@ -103,29 +125,42 @@ namespace ArasEmailService.Services
             {
                 foreach (var ra in reserved)
                 {
-                    string name = ra["accommodation_name"]?.ToString()
+                    // Prefer mapping by numeric accommodation id when available
+                    int accId = ra["accommodation"]?.Value<int?>() ?? 0;
+                    string nameFromFields = ra["accommodation_name"]?.ToString()
                                   ?? ra["accommodation_title"]?.ToString()
                                   ?? ra["title"]?.ToString()
-                                  ?? ra["name"]?.ToString()
-                                  ?? ra["accommodation"]?.ToString();
+                                  ?? ra["name"]?.ToString();
 
-                    // Try to extract a suite/room number and append if not present
-                    try
+                    string name = null;
+
+                    if (accId != 0 && AccommodationNames.TryGetValue(accId, out var friendly))
                     {
-                        var text = name ?? string.Empty;
-                        var m = System.Text.RegularExpressions.Regex.Match(text, "(\\d{1,2})");
-                        if (m.Success)
-                        {
-                            var suite = m.Value;
-                            if (!text.ToLowerInvariant().Contains("suite") && !text.ToLowerInvariant().Contains("ste") && !text.ToLowerInvariant().Contains("apt"))
-                            {
-                                text = $"{text} (Suite {suite})";
-                            }
-                        }
-
-                        name = text;
+                        name = friendly;
                     }
-                    catch { }
+                    else
+                    {
+                        // Fallback to textual fields or numeric id
+                        name = nameFromFields ?? (accId != 0 ? accId.ToString() : string.Empty);
+
+                        // Try to extract a suite/room number and append if not present
+                        try
+                        {
+                            var text = name ?? string.Empty;
+                            var m = System.Text.RegularExpressions.Regex.Match(text, "(\\d{1,2})");
+                            if (m.Success)
+                            {
+                                var suite = m.Value;
+                                if (!text.ToLowerInvariant().Contains("suite") && !text.ToLowerInvariant().Contains("ste") && !text.ToLowerInvariant().Contains("apt"))
+                                {
+                                    text = $"{text} (Suite {suite})";
+                                }
+                            }
+
+                            name = text;
+                        }
+                        catch { }
+                    }
 
                     accommodations.Add(name ?? string.Empty);
                 }

@@ -73,10 +73,14 @@ namespace ArasEmailService.Services
                     }
 
                     // Determine check-in and booking dates early so we can decide late vs arrival-guide
-                    var checkInDate = DateTime.MinValue;
+                    DateTimeOffset checkInDateOffset;
                     try
                     {
-                        checkInDate = DateTime.Parse((string)booking["check_in_date"], CultureInfo.InvariantCulture);
+                        if (!DateTimeOffset.TryParse((string)booking["check_in_date"], CultureInfo.InvariantCulture, out checkInDateOffset))
+                        {
+                            _logger.LogWarning("Could not parse 'check_in_date' for booking ID: {BookingId}. Skipping.", bookingId);
+                            continue;
+                        }
                     }
                     catch (Exception)
                     {
@@ -84,43 +88,72 @@ namespace ArasEmailService.Services
                         continue;
                     }
 
-                    DateTime bookingDate;
+                    // Capture raw strings for diagnostics
+                    var rawCheckIn = booking["check_in_date"]?.ToString();
+                    var rawCreated = booking["date_created"]?.ToString();
+
+                    DateTimeOffset bookingDateOffset = DateTimeOffset.MinValue;
                     try
                     {
-                        bookingDate = DateTime.Parse((string)booking["date_created"], CultureInfo.InvariantCulture);
+                        DateTimeOffset.TryParse((string)booking["date_created"], CultureInfo.InvariantCulture, out bookingDateOffset);
                     }
                     catch (Exception)
                     {
                         _logger.LogWarning("Could not parse 'date_created' for booking ID: {BookingId}. Treating as non-late.", bookingId);
-                        bookingDate = DateTime.MinValue;
+                        bookingDateOffset = DateTimeOffset.MinValue;
                     }
 
-                    bool isLateBooking = bookingDate != DateTime.MinValue && (checkInDate - bookingDate).TotalDays <= 10;
+                    // Late booking if booking was created within 10 days before check-in (based on creation vs check-in)
+                    bool isLateByAge = false;
+                    double diff = double.NaN;
+                    if (bookingDateOffset != DateTimeOffset.MinValue)
+                    {
+                        diff = (checkInDateOffset.UtcDateTime - bookingDateOffset.UtcDateTime).TotalDays;
+                        isLateByAge = diff >= 0 && diff <= 10;
+                    }
 
-                    if (isLateBooking)
+                    // Diagnostic logging to help investigate false positives
+                    if (isLateByAge)
+                    {
+                        _logger.LogInformation("Late booking detected for booking {BookingId}. raw check_in_date='{RawCheckIn}', raw date_created='{RawCreated}', parsed_check_in='{ParsedCheckIn}', parsed_created='{ParsedCreated}', diff_days={Diff}",
+                            bookingId,
+                            rawCheckIn ?? "(null)",
+                            rawCreated ?? "(null)",
+                            checkInDateOffset.UtcDateTime.ToString("o"),
+                            bookingDateOffset == DateTimeOffset.MinValue ? "(unparsed)" : bookingDateOffset.UtcDateTime.ToString("o"),
+                            double.IsNaN(diff) ? (object)"(n/a)" : diff);
+                    }
+
+                    // Send the 'late booking' notice when the booking was created within 10 days before check-in
+                    if (isLateByAge)
                     {
                         // For late-booking notices we DO NOT exclude imported bookings.
                         bool lateSent = await _logRepository.HasEmailBeenSentAsync(bookingId, DateTime.UtcNow.AddDays(-30), "Late Booking");
                         if (lateSent)
                         {
-                            _logger.LogInformation($"Late Booking email already sent for booking ID: {bookingId}. Skipping.");
-                            continue;
+                            _logger.LogInformation($"Late Booking email already sent for booking ID: {bookingId}.");
+                        }
+                        else
+                        {
+                            _logger.LogInformation("Processing booking ID: {BookingId} as late booking (booked within 10 days of check-in).", bookingId);
+                            await ProcessLateBookingAsync(booking);
                         }
 
-                        _logger.LogInformation("Processing booking ID: {BookingId} as late booking (booked within 10 days of check-in).", bookingId);
-                        await ProcessLateBookingAsync(booking);
-                        continue;
+                        // Do not short-circuit further processing — allow arrival guide flow to continue so the arrival guide
+                        // can be sent at its normal time (or immediately if it also qualifies now).
                     }
 
                     // For arrival guide flow we still exclude imported/external-imported bookings
+                    // However, if the booking is late (isLateByAge) we allow arrival guide to be sent as well so
+                    // both late booking notice and arrival guide can be delivered when applicable.
                     var isImported = booking.Value<bool?>("imported") ?? false;
-                    if (isImported)
+                    if (isImported && !isLateByAge)
                     {
                         _logger.LogInformation($"Skipping email for imported booking ID: {bookingId}");
                         continue;
                     }
 
-                    if ((checkInDate - DateTime.UtcNow).TotalDays >= 10)
+                    if ((checkInDateOffset.UtcDateTime - DateTime.UtcNow).TotalDays >= 10)
                     {
                         _logger.LogInformation("Skipping booking with ID: {BookingId} as check-in is not 10 days away.", bookingId);
                         continue;
@@ -175,11 +208,18 @@ namespace ArasEmailService.Services
                 // Extract the list of instructions
                 var instructionsList = new List<HtmlString>();
                 var reservedAccommodations = booking["reserved_accommodations"];
+                // Track which instruction providers we've already invoked for this booking to avoid duplicate blocks
+                var addedProviders = new HashSet<Func<JToken, string>>();
                 foreach (var reservedAccommodation in reservedAccommodations)
                 {
                     int accommodationId = (int)reservedAccommodation["accommodation"];
                     if (_accommodationInstructions.TryGetValue(accommodationId, out var instructions))
                     {
+                        // Only add one block per distinct instruction provider (delegate)
+                        if (addedProviders.Contains(instructions))
+                            continue;
+
+                        addedProviders.Add(instructions);
                         // Wrap the string returned by Invoke(booking) into an HtmlString
                         instructionsList.Add(new HtmlString(instructions.Invoke(booking)));
                     }
@@ -217,11 +257,18 @@ namespace ArasEmailService.Services
                 // Extract the list of instructions
                 var instructionsList = new List<HtmlString>();
                 var reservedAccommodations = booking["reserved_accommodations"];
+                // Track which instruction providers we've already invoked for this booking to avoid duplicate blocks
+                var addedProviders = new HashSet<Func<JToken, string>>();
                 foreach (var reservedAccommodation in reservedAccommodations)
                 {
                     int accommodationId = (int)reservedAccommodation["accommodation"];
                     if (_accommodationInstructions.TryGetValue(accommodationId, out var instructions))
                     {
+                        // Only add one block per distinct instruction provider (delegate)
+                        if (addedProviders.Contains(instructions))
+                            continue;
+
+                        addedProviders.Add(instructions);
                         // Wrap the string returned by Invoke(booking) into an HtmlString
                         instructionsList.Add(new HtmlString(instructions.Invoke(booking)));
                     }
