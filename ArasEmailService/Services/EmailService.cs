@@ -223,8 +223,28 @@ namespace ArasEmailService.Services
                             continue;
 
                         addedProviderKeys.Add(key);
-                        // Wrap the string returned by Invoke(booking) into an HtmlString
-                        instructionsList.Add(new HtmlString(instructions.Invoke(booking)));
+                        // For some providers (e.g. BlasketExtensionEmail) the instruction text is derived by
+                        // scanning booking["reserved_accommodations"]. To ensure we produce a per-accommodation
+                        // block we clone the booking and restrict reserved_accommodations to the current one
+                        // before invoking the provider.
+                        JToken bookingForInvoke = booking;
+                        if (providerType != null && providerType.Contains("BlasketExtensionEmail"))
+                        {
+                            try
+                            {
+                                var cloned = booking.DeepClone();
+                                cloned["reserved_accommodations"] = new JArray(reservedAccommodation);
+                                bookingForInvoke = cloned;
+                            }
+                            catch
+                            {
+                                // fallback to original booking if clone fails
+                                bookingForInvoke = booking;
+                            }
+                        }
+
+                        // Wrap the string returned by Invoke(bookingForInvoke) into an HtmlString
+                        instructionsList.Add(new HtmlString(instructions.Invoke(bookingForInvoke)));
                     }
                 }
 
@@ -273,8 +293,23 @@ namespace ArasEmailService.Services
                             continue;
 
                         addedProviderKeysLate.Add(key);
-                        // Wrap the string returned by Invoke(booking) into an HtmlString
-                        instructionsList.Add(new HtmlString(instructions.Invoke(booking)));
+                        JToken bookingForInvokeLate = booking;
+                        if (providerType != null && providerType.Contains("BlasketExtensionEmail"))
+                        {
+                            try
+                            {
+                                var cloned = booking.DeepClone();
+                                cloned["reserved_accommodations"] = new JArray(reservedAccommodation);
+                                bookingForInvokeLate = cloned;
+                            }
+                            catch
+                            {
+                                bookingForInvokeLate = booking;
+                            }
+                        }
+
+                        // Wrap the string returned by Invoke(bookingForInvokeLate) into an HtmlString
+                        instructionsList.Add(new HtmlString(instructions.Invoke(bookingForInvokeLate)));
                     }
                 }
 

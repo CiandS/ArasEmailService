@@ -225,7 +225,7 @@ namespace ArasEmailService.Services
 
                 var message = new MimeMessage();
                 message.From.Add(new MailboxAddress("Áras de Staic", "info@arasdestaic.com"));
-                //message.To.Add(new MailboxAddress("Experience Dingle", "info@experiencedingle.ie"));
+                message.To.Add(new MailboxAddress("Experience Dingle", "info@experiencedingle.ie"));
                 message.Bcc.Add(new MailboxAddress("Áras de Staic", "info@arasdestaic.com"));
                 message.Subject = $"Booking #{bookingId} — Late booking info";
                 message.Body = new TextPart("html") { Text = emailContent };
