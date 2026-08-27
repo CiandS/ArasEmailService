@@ -46,7 +46,15 @@ namespace ArasEmailService.Infrastructure.Extensions
             // Register application services with interfaces
             services.AddSingleton<IBookingApiClient, BookingApiClient>();
             services.AddSingleton<IEmailTemplateFactory, EmailTemplateFactory>();
-            services.AddSingleton<IEmailSender, EmailSender>();
+            // EmailSender requires IConfiguration for SMTP reconnect settings; register with factory
+            services.AddSingleton<IEmailSender>(provider =>
+            {
+                var smtp = provider.GetRequiredService<SmtpClient>();
+                var logger = provider.GetRequiredService<ILogger<EmailSender>>();
+                var tpl = provider.GetRequiredService<IEmailTemplateFactory>();
+                var configuration = provider.GetRequiredService<IConfiguration>();
+                return new EmailSender(smtp, logger, tpl, configuration);
+            });
             services.AddSingleton<EmailService>();
 
             // Booking state service (scoped) - uses same DB connection string
