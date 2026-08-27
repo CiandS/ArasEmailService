@@ -208,18 +208,21 @@ namespace ArasEmailService.Services
                 // Extract the list of instructions
                 var instructionsList = new List<HtmlString>();
                 var reservedAccommodations = booking["reserved_accommodations"];
-                // Track which instruction providers we've already invoked for this booking to avoid duplicate blocks
-                var addedProviders = new HashSet<Func<JToken, string>>();
+                // Track which instruction provider+accommodation we've already invoked to avoid exact duplicates
+                var addedProviderKeys = new HashSet<string>();
                 foreach (var reservedAccommodation in reservedAccommodations)
                 {
                     int accommodationId = (int)reservedAccommodation["accommodation"];
                     if (_accommodationInstructions.TryGetValue(accommodationId, out var instructions))
                     {
-                        // Only add one block per distinct instruction provider (delegate)
-                        if (addedProviders.Contains(instructions))
+                        // Use provider type name + accommodation id as key so different accommodations handled by same
+                        // provider still get individual instruction blocks (e.g. multiple extension suites).
+                        var providerType = instructions.Method.DeclaringType?.FullName ?? instructions.Method.Name;
+                        var key = providerType + ":" + accommodationId;
+                        if (addedProviderKeys.Contains(key))
                             continue;
 
-                        addedProviders.Add(instructions);
+                        addedProviderKeys.Add(key);
                         // Wrap the string returned by Invoke(booking) into an HtmlString
                         instructionsList.Add(new HtmlString(instructions.Invoke(booking)));
                     }
@@ -257,18 +260,19 @@ namespace ArasEmailService.Services
                 // Extract the list of instructions
                 var instructionsList = new List<HtmlString>();
                 var reservedAccommodations = booking["reserved_accommodations"];
-                // Track which instruction providers we've already invoked for this booking to avoid duplicate blocks
-                var addedProviders = new HashSet<Func<JToken, string>>();
+                // Track which instruction provider+accommodation we've already invoked to avoid exact duplicates
+                var addedProviderKeysLate = new HashSet<string>();
                 foreach (var reservedAccommodation in reservedAccommodations)
                 {
                     int accommodationId = (int)reservedAccommodation["accommodation"];
                     if (_accommodationInstructions.TryGetValue(accommodationId, out var instructions))
                     {
-                        // Only add one block per distinct instruction provider (delegate)
-                        if (addedProviders.Contains(instructions))
+                        var providerType = instructions.Method.DeclaringType?.FullName ?? instructions.Method.Name;
+                        var key = providerType + ":" + accommodationId;
+                        if (addedProviderKeysLate.Contains(key))
                             continue;
 
-                        addedProviders.Add(instructions);
+                        addedProviderKeysLate.Add(key);
                         // Wrap the string returned by Invoke(booking) into an HtmlString
                         instructionsList.Add(new HtmlString(instructions.Invoke(booking)));
                     }
