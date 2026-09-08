@@ -136,11 +136,18 @@ namespace ArasEmailService.EmailTemplates
                 ? $"<p><em>Part of the {collectionName} collection.</em></p>"
                 : string.Empty;
 
+            // Only suites 13..16 are upstairs
+            var upstairsSuites = new System.Collections.Generic.HashSet<int> { 13, 14, 15, 16 };
+            var suiteLabel = suiteNumber != 0 ? $"Suite {suiteNumber}" : "your suite";
+            var isUpstairs = suiteNumber != 0 && upstairsSuites.Contains(suiteNumber);
+            var locationText = isUpstairs ? "up the staircase." : "on the ground floor.";
+
             return $@"
             <h3>{mainHeader}</h3>
             <p>We look forward to welcoming you to our brand new extension in the Blasket Suite.</p>
 
-            <p>To get here, please enter through the <span style='color:purple'>PURPLE</span> front door with keypad code <strong>0669</strong>. You then enter the door to the left under the stairs, continue out the back door and you will see our new extension. Continue along the outer Georgian coloured doors to the Oak main entrance of the new section. The keypad code here is <strong>0669</strong> also (same for back door entrance too). You will find {(suiteNumber != 0 ? $"Suite {suiteNumber}" : "your suite")} up the staircase all the way to the left. The lockbox code for this suite is <strong>{lockboxCode}</strong>.</p>
+            <p>To get here, please enter through the <span style='color:purple'>PURPLE</span> front door with keypad code <strong>0669</strong>. You then enter the door to the left under the stairs, continue out the back door and you will see our new extension. Continue along the outer Georgian coloured doors to the Oak main entrance of the new section. The keypad code here is <strong>0669</strong> also (same for back door entrance too). 
+You will find {suiteLabel} {locationText} The lockbox code for this suite is <strong>{lockboxCode}</strong>.</p>
 
             {mainCollectionHtml}
             <p>Please feel free to use the complimentary communal kitchen area downstairs if you wish also. Enjoy 😊</p>
