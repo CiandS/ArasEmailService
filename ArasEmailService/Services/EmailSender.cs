@@ -65,11 +65,28 @@ namespace ArasEmailService.Services
             string reviewLink = "https://g.page/r/CbQcbuEAJu6REBM/review";
 
             // Prepare the email model
+            // Parse check-in/check-out
+            DateTime? checkIn = null;
+            DateTime? checkOut = null;
+            try
+            {
+                if (booking["check_in_date"] != null)
+                    checkIn = DateTime.Parse((string)booking["check_in_date"]);
+                if (booking["check_out_date"] != null)
+                    checkOut = DateTime.Parse((string)booking["check_out_date"]);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to parse checkin/checkout for booking ID: {BookingId}", bookingId);
+            }
+
             var emailModel = new ArrivalGuide
             {
                 Id = bookingId,
                 CustomerName = $"{booking["customer"]["first_name"]}",
                 Instructions = instructionsList,
+                CheckInDate = checkIn,
+                CheckOutDate = checkOut,
                 DirectionsLink = directionsLink,
                 ParkingLink = parkingLink,
                 ReviewLink = reviewLink,
