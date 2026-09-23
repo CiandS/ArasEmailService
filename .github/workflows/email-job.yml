@@ -4,7 +4,8 @@ on:
   workflow_dispatch: # manual run
   schedule:
     - cron: '0 7 * * *' # 7am UTC daily
-
+    - cron: '0 12 * * *' # 12pm UTC daily
+    - cron: '0 19 * * *' # 7pm UTC daily
 jobs:
   run-email-service:
     runs-on: ubuntu-latest
