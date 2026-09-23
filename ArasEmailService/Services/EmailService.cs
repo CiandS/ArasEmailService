@@ -103,12 +103,17 @@ namespace ArasEmailService.Services
                         bookingDateOffset = DateTimeOffset.MinValue;
                     }
 
-                    // Late booking if booking was created within 10 days before check-in (based on creation vs check-in)
+                    // Late booking if booking was created within 10 calendar days before check-in,
+                    // including same-day bookings.
                     bool isLateByAge = false;
                     double diff = double.NaN;
+
                     if (bookingDateOffset != DateTimeOffset.MinValue)
                     {
-                        diff = (checkInDateOffset.UtcDateTime - bookingDateOffset.UtcDateTime).TotalDays;
+                        var checkInDate = checkInDateOffset.Date;
+                        var bookingDate = bookingDateOffset.Date;
+
+                        diff = (checkInDate - bookingDate).TotalDays;
                         isLateByAge = diff >= 0 && diff <= 10;
                     }
 

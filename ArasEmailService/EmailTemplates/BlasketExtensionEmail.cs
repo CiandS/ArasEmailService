@@ -82,13 +82,14 @@ namespace ArasEmailService.EmailTemplates
 
             // Map lockbox codes for new extension suites (7..16). Update if codes differ.
             string lockboxCode = "1326"; // default
+            string frontDoorCode = "0669";
             if (suiteNumber != 0)
             {
                 var map = new System.Collections.Generic.Dictionary<int, string>
                 {
-                    {7,  "0726"},
-                    {8,  "0826"},
-                    {9,  "0926"},
+                    {7,  "0669"},
+                    {8,  "0669"},
+                    {9,  "0669"},
                     {10, "1026"},
                     {11, "1126"},
                     {12, "1226"},
@@ -118,9 +119,15 @@ namespace ArasEmailService.EmailTemplates
 
                 return $@"
             <h3>{header}</h3>
-            <p>To get here, please enter through the <span style='color:purple'>PURPLE</span> front door with keypad code <strong>0669</strong>.</p>
             {collectionHtml}
-            <p>Welcome to the outdoor extension. Please enter via the courtyard / back entrance. The courtyard/back keypads use code <strong>0669</strong>. You will find {(suiteNumber != 0 ? $"Suite {suiteNumber}" : "your suite")} from the courtyard; the lockbox code for this suite is <strong>{lockboxCode}</strong>.</p>
+
+            <h4>On Arrival</h4>
+            <ol>
+                <li>Enter via the <span style='color:purple'><strong>PURPLE</strong></span> front door or courtyard/back entrance.</li>
+                <li>Use keypad code <strong>{frontDoorCode}</strong> for the door and lockbox code <strong>{lockboxCode}</strong> to retrieve your keys.</li>
+                <li>Your suite will be located in the courtyard {(suiteNumber != 0 ? $"as Suite {suiteNumber}" : "") }.</li>
+                <li>Please scramble the lockbox code after retrieving your keys and again when leaving.</li>
+            </ol>
 
             <p>Please feel free to use the complimentary communal kitchen area downstairs if you wish also. Enjoy 😊</p>
     ";
@@ -146,8 +153,13 @@ namespace ArasEmailService.EmailTemplates
             <h3>{mainHeader}</h3>
             <p>We look forward to welcoming you to our brand new extension in the Blasket Suite.</p>
 
-            <p>To get here, please enter through the <span style='color:purple'>PURPLE</span> front door with keypad code <strong>0669</strong>. You then enter the door to the left under the stairs, continue out the back door and you will see our new extension. Continue along the outer Georgian coloured doors to the Oak main entrance of the new section. The keypad code here is <strong>0669</strong> also (same for back door entrance too). 
-You will find {suiteLabel} {locationText} The lockbox code for this suite is <strong>{lockboxCode}</strong>.</p>
+            <h4>On Arrival</h4>
+            <ol>
+                <li>Enter through the <span style='color:purple'><strong>PURPLE</strong></span> front door.</li>
+                <li>Use keypad code <strong>{frontDoorCode}</strong> for the front door and lockbox code <strong>{lockboxCode}</strong> to retrieve your keys.</li>
+                <li>You will find {suiteLabel} {locationText}</li>
+                <li>Please scramble the lockbox code after retrieving your keys and again when leaving.</li>
+            </ol>
 
             {mainCollectionHtml}
             <p>Please feel free to use the complimentary communal kitchen area downstairs if you wish also. Enjoy 😊</p>

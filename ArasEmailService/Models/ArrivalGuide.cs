@@ -12,6 +12,8 @@ namespace ArasEmailService.Models
         public int Id { get; set; }
         public List<HtmlString> Instructions { get; set; }
         public string CustomerName { get; set; }
+        public DateTime? CheckInDate { get; set; }
+        public DateTime? CheckOutDate { get; set; }
         public string DirectionsLink { get; set; }
         public string ParkingLink { get; set; }
         public string ReviewLink { get; set; }

@@ -13,7 +13,15 @@ namespace ArasEmailService.EmailTemplates
         {
             return $@"
             <h4>Apt. 1: James Joyce</h4>
-            <p>Please enter through the <span style='color:limegreen'>LIME GREEN</span> front door with lockbox code <strong>1912</strong>. Your apartment is on the ground floor. Please scramble the code after retrieving keys and after leaving. Thank you!</p>
+
+            <h4>On Arrival</h4>
+
+            <ol>
+                <li>Enter through the <span style='color:limegreen'><strong>LIME GREEN</strong></span> front door.</li>
+                <li>Use lockbox code <strong>1912</strong> to retrieve your keys.</li>
+                <li>Your apartment is located on the <strong>ground floor</strong>.</li>
+                <li>Please scramble the lockbox code after retrieving your keys and again when leaving.</li>
+            </ol>
 
             <h3>Amenities</h3>
             <ul>
