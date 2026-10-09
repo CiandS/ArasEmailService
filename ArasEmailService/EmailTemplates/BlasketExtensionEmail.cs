@@ -87,9 +87,9 @@ namespace ArasEmailService.EmailTemplates
             {
                 var map = new System.Collections.Generic.Dictionary<int, string>
                 {
-                    {7,  "0669"},
-                    {8,  "0669"},
-                    {9,  "0669"},
+                    {7,  "0726"},
+                    {8,  "0826"},
+                    {9,  "0926"},
                     {10, "1026"},
                     {11, "1126"},
                     {12, "1226"},
@@ -123,13 +123,14 @@ namespace ArasEmailService.EmailTemplates
 
             <h4>On Arrival</h4>
             <ol>
-                <li>Enter via the <span style='color:purple'><strong>PURPLE</strong></span> front door or courtyard/back entrance.</li>
-                <li>Use keypad code <strong>{frontDoorCode}</strong> for the door and lockbox code <strong>{lockboxCode}</strong> to retrieve your keys.</li>
-                <li>Your suite will be located in the courtyard {(suiteNumber != 0 ? $"as Suite {suiteNumber}" : "") }.</li>
-                <li>Please scramble the lockbox code after retrieving your keys and again when leaving.</li>
+                <li>Enter via the <span style='color:purple'><strong>PURPLE</strong></span> front door.</li>
+                <li>Continue straight through the doorway to the left of the staircase until you reach the backdoor entrance to the original building.</li>
+                <li>Outside this door you will find our courtyard suites. The keypad code for re-entry is <strong>{frontDoorCode}</strong> (same for front door entrance).</li>
+                <li>Your suite is located in the courtyard {(suiteNumber != 0 ? $"as Suite {suiteNumber}" : "") }.</li>
+                <li>Use keypad code <strong>{lockboxCode}</strong> for your door.</li>
             </ol>
 
-            <p>Please feel free to use the complimentary communal kitchen area downstairs if you wish also. Enjoy 😊</p>
+            <p>You are invited to use the complimentary communal kitchen area downstairs of the extension (Oak Door) if you wish also. Keypade code on this door is <strong>{frontDoorCode}</strong>. Enjoy 😊</p>
     ";
             }
 
@@ -155,14 +156,16 @@ namespace ArasEmailService.EmailTemplates
 
             <h4>On Arrival</h4>
             <ol>
-                <li>Enter through the <span style='color:purple'><strong>PURPLE</strong></span> front door.</li>
-                <li>Use keypad code <strong>{frontDoorCode}</strong> for the front door and lockbox code <strong>{lockboxCode}</strong> to retrieve your keys.</li>
+                <li>Enter via the <span style='color:purple'><strong>PURPLE</strong></span> front door.</li>
+                <li>Continue straight through the doorway to the left of the staircase until you reach the backdoor entrance to the original building.</li>
+                <li>Continue along the outer Georgian coloured doors to the Oak main entrance of the new section. The keypad code here is <strong>{frontDoorCode}</strong> also (same for back door entrance too).</li>
                 <li>You will find {suiteLabel} {locationText}</li>
+                <li>Use lockbox code <strong>{lockboxCode}</strong> to retrieve your keys.</li>
                 <li>Please scramble the lockbox code after retrieving your keys and again when leaving.</li>
             </ol>
 
             {mainCollectionHtml}
-            <p>Please feel free to use the complimentary communal kitchen area downstairs if you wish also. Enjoy 😊</p>
+            <p>You are invited to use the complimentary communal kitchen area if you wish also. Enjoy 😊</p>
     ";
         }
     }
